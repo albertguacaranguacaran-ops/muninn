@@ -1,0 +1,85 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #06090f;
+  --bg2: #0d1420;
+  --card: #111827;
+  --card2: #1a2235;
+  --border: rgba(255,255,255,0.07);
+  --gold: #FFCE00;
+  --gold2: #e6b800;
+  --blue: #0033A0;
+  --blue2: #1a4fd6;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --radius: 12px;
+}
+
+html, body { height: 100%; font-family: inherit; background: var(--bg); color: var(--text); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px; font-weight: 700;
+  font-size: 0.82rem; letter-spacing: 0.5px; cursor: pointer;
+  border: none; transition: all 0.2s; font-family: inherit;
+}
+.btn-gold { background: var(--gold); color: #0a0f1e; }
+.btn-gold:hover:not(:disabled) { background: var(--gold2); transform: translateY(-1px); }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-blue:hover:not(:disabled) { background: var(--blue2); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+}
+
+.input {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px; color: var(--text);
+  font-size: 0.85rem; font-family: inherit; outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus { border-color: var(--gold); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
+}
+.badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+.badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+.badge-red   { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge-blue  { background: rgba(0,51,160,0.2); color: #60a5fa; }
+.badge-purple{ background: rgba(139,92,246,0.15); color: var(--purple); }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { text-align: left; padding: 10px 14px; color: var(--muted); font-weight: 700;
+     font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;
+     border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.2); border-top-color: currentColor;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+.fade-up { animation: fadeUp 0.3s ease; }
+
+/* Raven pulse animation for logo */
+@keyframes ravenPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
