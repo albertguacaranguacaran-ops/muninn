@@ -33,13 +33,22 @@ export default function MuninnApp() {
   const [totalSAP, setTotalSAP] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [busq, setBusq] = useState("");
+  const [metricas, setMetricas] = useState<any>(null);
+  const [cargandoMetricas, setCargandoMetricas] = useState(false);
 
   useEffect(() => {
     fetch("/api/login").then(r=>r.json()).then(d=>{ if(d.nombres) setNombres(d.nombres); });
     try { const s=localStorage.getItem("muninn_session"); if(s){const p=JSON.parse(s);if(p?.nombre) setUsuario(p);} } catch {}
   }, []);
 
-  useEffect(() => { if(usuario && (tab==="maestro"||tab==="dashboard")) cargarMaestro(); }, [usuario, tab]);
+  useEffect(() => { if(usuario && (tab==="maestro"||tab==="dashboard")) { cargarMaestro(); cargarMetricas(); } }, [usuario, tab]);
+
+  const cargarMetricas = async () => {
+    setCargandoMetricas(true);
+    const r = await fetch("/api/muninn/metricas"); const d = await r.json();
+    if(d.ok) setMetricas(d);
+    setCargandoMetricas(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoginLoad(true); setLoginError("");
@@ -161,12 +170,13 @@ export default function MuninnApp() {
         {/* ── DASHBOARD ── */}
         {tab==="dashboard" && (
           <div>
+            {/* KPI cards ecosistema */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:24}}>
               {[
-                {label:"Registros en SAP",val:totalSAP,icon:"📑",color:AZUL},
-                {label:"Productos Cruzados",val:resumen?.total||0,icon:"✅",color:"#10b981"},
-                {label:"Fotos Pendientes",val:resumen?.fotosPendientes||0,icon:"🔨",color:"#f59e0b"},
-                {label:"Garantías Pendientes",val:resumen?.garantiaPendiente||0,icon:"👁",color:"#8b5cf6"},
+                {label:"Formularios BIFROST",val:metricas?.ecosistema?.bifrost?.total||0,icon:"⚡",color:AZUL},
+                {label:"Respondidos Proveedores",val:metricas?.ecosistema?.bifrost?.respondidos||0,icon:"✅",color:"#10b981"},
+                {label:"Pendientes de Cruce SAP",val:Math.max(0,metricas?.ecosistema?.muninn?.sinCruzar||0),icon:"🪬",color:"#f59e0b"},
+                {label:"Sin Fotos (SINDRI)",val:metricas?.ecosistema?.sindri?.fotosPendientes||0,icon:"🔨",color:"#8b5cf6"},
               ].map(k=>(
                 <div key={k.label} style={{background:"white",borderRadius:16,padding:"20px 24px",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",borderTop:`4px solid ${k.color}`}}>
                   <div style={{fontSize:24,marginBottom:6}}>{k.icon}</div>
@@ -175,6 +185,52 @@ export default function MuninnApp() {
                 </div>
               ))}
             </div>
+
+            {/* Tabla de métricas por compradora */}
+            <div style={{background:"white",borderRadius:16,boxShadow:"0 2px 8px rgba(0,0,0,0.06)",marginBottom:24,overflow:"hidden"}}>
+              <div style={{background:AZUL,padding:"16px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{color:"white",fontWeight:900,fontSize:15}}>📊 Métricas por Compradora</div>
+                <button onClick={cargarMetricas} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontFamily:"Poppins",fontWeight:700,fontSize:12}}>↻ Actualizar</button>
+              </div>
+              {cargandoMetricas ? (
+                <div style={{textAlign:"center",padding:40,color:"#6b7280"}}>⏳ Cargando métricas...</div>
+              ) : (
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <thead>
+                    <tr style={{borderBottom:"2px solid #f3f4f6"}}>
+                      {["Compradora","Total Forms","Respondidos","Pendientes","% Respuesta","Cruzados SAP","Sin Cruzar"].map(h=>(
+                        <th key={h} style={{padding:"10px 14px",textAlign:"left",color:"#6b7280",fontWeight:700,fontSize:11,letterSpacing:".5px",textTransform:"uppercase"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(metricas?.compradoras||[]).map((c:any)=>(
+                      <tr key={c.nombre} style={{borderBottom:"1px solid #f9fafb"}}>
+                        <td style={{padding:"12px 14px",fontWeight:700,color:AZUL}}>{c.nombre}</td>
+                        <td style={{padding:"12px 14px",color:"#374151",fontWeight:600}}>{c.total}</td>
+                        <td style={{padding:"12px 14px"}}><span style={{background:"#f0fdf4",color:"#166534",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>{c.respondidos}</span></td>
+                        <td style={{padding:"12px 14px"}}><span style={{background:c.pendientes>0?"#fef2f2":"#f9fafb",color:c.pendientes>0?"#dc2626":"#9ca3af",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>{c.pendientes}</span></td>
+                        <td style={{padding:"12px 14px"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div style={{flex:1,background:"#f3f4f6",borderRadius:20,height:6,overflow:"hidden"}}>
+                              <div style={{width:`${c.tasaRespuesta}%`,background:c.tasaRespuesta>=80?"#10b981":c.tasaRespuesta>=50?"#f59e0b":"#ef4444",height:"100%",borderRadius:20,transition:"width .5s"}} />
+                            </div>
+                            <span style={{fontSize:12,fontWeight:700,color:c.tasaRespuesta>=80?"#10b981":c.tasaRespuesta>=50?"#f59e0b":"#ef4444",minWidth:36}}>{c.tasaRespuesta}%</span>
+                          </div>
+                        </td>
+                        <td style={{padding:"12px 14px"}}><span style={{background:"#eff6ff",color:"#1d4ed8",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>{c.cruzados}</span></td>
+                        <td style={{padding:"12px 14px"}}><span style={{background:c.sinCruzar>0?"#fffbeb":"#f9fafb",color:c.sinCruzar>0?"#92400e":"#9ca3af",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>{c.sinCruzar}</span></td>
+                      </tr>
+                    ))}
+                    {(!metricas?.compradoras||metricas.compradoras.length===0)&&(
+                      <tr><td colSpan={7} style={{textAlign:"center",padding:40,color:"#9ca3af"}}>Sin datos — verifica que FormulariosSolicitudes tenga registros.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Flujo del día */}
             <div style={{background:"white",borderRadius:16,padding:24,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
               <div style={{fontWeight:800,color:AZUL,marginBottom:12}}>⚡ Flujo del Día</div>
               {[
