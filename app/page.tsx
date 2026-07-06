@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 const AZUL = "#0f2d6e";
 const AMARILLO = "#f5c518";
-const ROL_REQUERIDO = "Gerente de servicio tecnico";
+const ROLES_PERMITIDOS = ["admin", "Coordinador"];
 
 interface Usuario { nombre: string; rol: string; }
 interface Producto {
@@ -46,7 +46,7 @@ export default function MuninnApp() {
     const r = await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre:loginNombre,clave:loginClave})});
     const d = await r.json();
     if(!r.ok){setLoginError(d.error||"Error");setLoginLoad(false);return;}
-    if(d.rol !== ROL_REQUERIDO){setLoginError("⛔ Sin acceso a MUNINN. Solo Gerente de Servicio Técnico.");setLoginLoad(false);return;}
+    if(!ROLES_PERMITIDOS.includes(d.rol)){setLoginError("⛔ Sin acceso a MUNINN. Solo el Coordinador.");setLoginLoad(false);return;}
     setUsuario(d);
     try{localStorage.setItem("muninn_session",JSON.stringify(d));}catch{}
     setLoginLoad(false);
