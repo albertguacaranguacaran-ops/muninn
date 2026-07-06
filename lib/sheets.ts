@@ -1,15 +1,15 @@
 import { google } from "googleapis";
+import { JWT } from "google-auth-library";
 
 const SHEET_ID = process.env.PRISMA_SHEET_ID!;
 
 function getAuth() {
   const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
-  return new google.auth.JWT(
-    process.env.GOOGLE_CLIENT_EMAIL,
-    undefined,
+  return new JWT({
+    email: process.env.GOOGLE_CLIENT_EMAIL,
     key,
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
 }
 
 export async function leerHoja(rango: string): Promise<string[][]> {
