@@ -9,6 +9,7 @@ interface Producto {
 interface ResultadoCruce {
   itemCode: string; estado: string; codSAP?: string; descripcion?: string;
   linea?: string; opciones?: { codSAP: string; descripcion: string; linea: string }[];
+  solicitud?: any;
 }
 
 const LINEA_COLOR: Record<string, string> = {
