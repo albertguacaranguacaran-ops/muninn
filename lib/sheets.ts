@@ -1,27 +1,26 @@
 import { google } from "googleapis";
-import { JWT } from "google-auth-library";
 
 const SHEET_ID = process.env.PRISMA_SHEET_ID!;
 
 function getAuth() {
   const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
-  return new JWT({
-    email: process.env.GOOGLE_CLIENT_EMAIL,
-    key,
+  return new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: key,
+    },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 }
 
 export async function leerHoja(rango: string): Promise<string[][]> {
-  const auth = getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = google.sheets({ version: "v4", auth: getAuth() });
   const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: rango });
   return (res.data.values as string[][]) || [];
 }
 
 export async function escribirHoja(rango: string, valores: any[][]): Promise<void> {
-  const auth = getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = google.sheets({ version: "v4", auth: getAuth() });
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID,
     range: rango,
@@ -31,8 +30,7 @@ export async function escribirHoja(rango: string, valores: any[][]): Promise<voi
 }
 
 export async function agregarFila(hoja: string, fila: any[]): Promise<void> {
-  const auth = getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
+  const sheets = google.sheets({ version: "v4", auth: getAuth() });
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
     range: `${hoja}!A1`,
@@ -43,12 +41,9 @@ export async function agregarFila(hoja: string, fila: any[]): Promise<void> {
 }
 
 export async function limpiarYEscribirHoja(hoja: string, filas: any[][]): Promise<void> {
-  const auth = getAuth();
-  const sheets = google.sheets({ version: "v4", auth });
-  // Limpiar primero
+  const sheets = google.sheets({ version: "v4", auth: getAuth() });
   await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `${hoja}!A2:Z10000` });
   if (filas.length === 0) return;
-  // Escribir nuevos datos
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID,
     range: `${hoja}!A2`,
